@@ -15,12 +15,15 @@ func TestPower(t *testing.T) {
 		{name: "negative exponent", a: 2, b: -2, want: 0.25},
 		{name: "fractional exponent", a: 9, b: 0.5, want: 3},
 		{name: "negative base with odd exponent", a: -2, b: 3, want: -8},
+		// 0^-1 equals 1/0: math.Pow would return +Inf, but the real cause is a division by zero.
 		{name: "zero to a negative exponent", a: 0, b: -1, wantErr: calculator.ErrDivisionByZero},
+		// (-8)^0.5 is the square root of a negative number: math.Pow returns NaN.
 		{name: "negative base with fractional exponent", a: -8, b: 0.5, wantErr: calculator.ErrUndefinedResult},
 		{name: "overflow", a: 10, b: 400, wantErr: calculator.ErrResultOutOfRange},
 	})
 }
 
+// SquareRoot takes a single operand, so it uses its own table instead of runBinaryCases.
 func TestSquareRoot(t *testing.T) {
 	cases := []struct {
 		name    string
@@ -50,6 +53,7 @@ func TestSquareRoot(t *testing.T) {
 
 func TestPercentage(t *testing.T) {
 	runBinaryCases(t, calculator.Percentage, []binaryCase{
+		// Must be exactly 30: Percentage multiplies before dividing to avoid 0.15 * 200 rounding.
 		{name: "whole numbers", a: 15, b: 200, want: 30},
 		{name: "decimal percent", a: 12.5, b: 80, want: 10},
 		{name: "more than one hundred percent", a: 150, b: 40, want: 60},
