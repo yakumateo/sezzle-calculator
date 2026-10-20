@@ -17,6 +17,9 @@ type binaryCase struct {
 }
 
 // runBinaryCases runs each case as a named subtest against op.
+//
+// Results are compared with != on purpose: every expected value in these
+// tables is exactly representable in float64, so no tolerance is needed.
 func runBinaryCases(t *testing.T, op func(a, b float64) (float64, error), cases []binaryCase) {
 	t.Helper()
 	for _, tc := range cases {
@@ -38,6 +41,7 @@ func TestAdd(t *testing.T) {
 		{name: "positive numbers", a: 2, b: 3, want: 5},
 		{name: "negative numbers", a: -2, b: -3, want: -5},
 		{name: "decimals", a: 1.5, b: 2.25, want: 3.75},
+		// The raw sum is +Inf, which JSON cannot encode, so it must become an error.
 		{name: "overflow", a: math.MaxFloat64, b: math.MaxFloat64, wantErr: calculator.ErrResultOutOfRange},
 	})
 }
@@ -59,6 +63,9 @@ func TestMultiply(t *testing.T) {
 	})
 }
 
+// In IEEE 754, -1 * 0 is -0. Since -0 == 0 is true, the table in TestMultiply
+// cannot catch it, so the sign bit is checked explicitly. Without the
+// normalization the API would answer "-0".
 func TestMultiplyNormalizesNegativeZero(t *testing.T) {
 	got, err := calculator.Multiply(-1, 0)
 
@@ -76,6 +83,7 @@ func TestDivide(t *testing.T) {
 		{name: "negative divisor", a: 9, b: -3, want: -3},
 		{name: "zero dividend", a: 0, b: 5, want: 0},
 		{name: "division by zero", a: 1, b: 0, wantErr: calculator.ErrDivisionByZero},
+		// 0 / 0 is NaN in float64; it must still be reported as division by zero.
 		{name: "zero divided by zero", a: 0, b: 0, wantErr: calculator.ErrDivisionByZero},
 		{name: "overflow", a: math.MaxFloat64, b: 0.5, wantErr: calculator.ErrResultOutOfRange},
 	})
