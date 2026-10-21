@@ -53,6 +53,7 @@ func TestRouter(t *testing.T) {
 
 		// Routing.
 		{"health", "GET", "/health", ``, 200, `{"status":"ok"}`},
+		{"docs page", "GET", "/docs", ``, 200, ``},
 		{"wrong method", "GET", "/api/v1/add", ``, 405, ``},
 		{"unknown operation", "POST", "/api/v1/modulo", `{"a": 1, "b": 2}`, 404, ``},
 	}
@@ -76,6 +77,23 @@ func TestRouter(t *testing.T) {
 				t.Errorf("body =\n%s\nwant\n%s", got, tc.wantBody)
 			}
 		})
+	}
+}
+
+// The OpenAPI contract is written by hand, so this guards against adding an
+// endpoint and forgetting to document it.
+func TestEveryOperationIsDocumented(t *testing.T) {
+	rec := httptest.NewRecorder()
+	httpapi.NewRouter().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/docs/openapi.yaml", nil))
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusOK)
+	}
+	spec := rec.Body.String()
+	for _, op := range []string{"add", "subtract", "multiply", "divide", "power", "percentage", "sqrt"} {
+		if !strings.Contains(spec, "/api/v1/"+op+":") {
+			t.Errorf("operation %q is not documented in openapi.yaml", op)
+		}
 	}
 }
 
