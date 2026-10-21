@@ -3,6 +3,7 @@ package httpapi
 import (
 	"net/http"
 
+	"github.com/yakumateo/sezzle-calculator/backend/api"
 	"github.com/yakumateo/sezzle-calculator/backend/internal/calculator"
 )
 
@@ -14,6 +15,8 @@ func NewRouter() http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /health", health)
+	mux.HandleFunc("GET /docs", api.Page)
+	mux.HandleFunc("GET /docs/openapi.yaml", api.Spec)
 
 	mux.HandleFunc("POST /api/v1/add", binaryHandler("add", calculator.Add))
 	mux.HandleFunc("POST /api/v1/subtract", binaryHandler("subtract", calculator.Subtract))
