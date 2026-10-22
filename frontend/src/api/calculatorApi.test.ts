@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { calculate } from './calculatorApi'
+import { ApiError, calculate } from './calculatorApi'
 
 /** Replaces the global fetch with a mock that resolves to the given response. */
 function mockFetch(response: Response) {
@@ -39,7 +39,23 @@ describe('calculate', () => {
     expect(fetchMock.mock.calls[0][1].body).toBe('{"a":9}')
   })
 
-  it('throws an ApiError when the response is not successful', async () => {
+  it('throws the problem detail returned by the backend', async () => {
+    mockFetch(
+      jsonResponse(
+        { type: 'about:blank', title: 'Unprocessable Entity', status: 422, detail: 'division by zero' },
+        422,
+        'application/problem+json',
+      ),
+    )
+
+    await expect(calculate('divide', 1, 0)).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 422,
+      message: 'Division by zero',
+    })
+  })
+
+  it('throws a generic message when the error body is not JSON', async () => {
     mockFetch(new Response('<html>Bad Gateway</html>', { status: 502 }))
 
     await expect(calculate('add', 1, 2)).rejects.toMatchObject({
@@ -47,5 +63,23 @@ describe('calculate', () => {
       status: 502,
       message: 'Unexpected error (HTTP 502). Please try again.',
     })
+  })
+
+  it('throws a generic message when the JSON error has no detail', async () => {
+    mockFetch(jsonResponse({ error: 'something' }, 500))
+
+    await expect(calculate('add', 1, 2)).rejects.toMatchObject({
+      status: 500,
+      message: 'Unexpected error (HTTP 500). Please try again.',
+    })
+  })
+
+  it('throws a connection error when the server cannot be reached', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')))
+
+    const error = await calculate('add', 1, 2).catch((e: unknown) => e)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error).toMatchObject({ status: 0, message: expect.stringContaining('Could not reach the server') })
   })
 })
