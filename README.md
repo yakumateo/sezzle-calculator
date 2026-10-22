@@ -17,6 +17,7 @@ perform basic and advanced arithmetic operations.
 - [Quick start with Docker](#quick-start-with-docker)
 - [Running the backend](#running-the-backend)
 - [Running the frontend](#running-the-frontend)
+- [API](#api)
 - [AI usage](#ai-usage)
 
 ## Architecture
@@ -109,6 +110,84 @@ Open <http://localhost:5173>.
 | `npm test` | Runs the unit tests once |
 | `npm run coverage` | Runs the tests with a coverage report |
 | `npm run lint` | Lints with oxlint |
+
+## API
+
+Every operation is a `POST` with a JSON body. The full contract is in
+[`backend/api/openapi.yaml`](backend/api/openapi.yaml) and can be tried in Swagger UI at `/docs`.
+
+| Endpoint | Body | Result |
+|---|---|---|
+| `POST /api/v1/add` | `{"a": 2, "b": 3}` | `a + b` |
+| `POST /api/v1/subtract` | `{"a": 2, "b": 3}` | `a - b` |
+| `POST /api/v1/multiply` | `{"a": 2, "b": 3}` | `a * b` |
+| `POST /api/v1/divide` | `{"a": 10, "b": 4}` | `a / b` |
+| `POST /api/v1/power` | `{"a": 2, "b": 10}` | `a` raised to `b` |
+| `POST /api/v1/percentage` | `{"a": 15, "b": 200}` | `a` percent of `b` (here, 30) |
+| `POST /api/v1/sqrt` | `{"a": 16}` | square root of `a` |
+| `GET /health` | | `{"status": "ok"}` |
+
+### Errors
+
+Errors use Problem Details (`application/problem+json`):
+
+| Status | When |
+|---|---|
+| `400` | Invalid JSON, a missing or unknown field, or a value that is not a number |
+| `413` | The body is larger than 1 KiB |
+| `422` | The request is valid but the result is undefined: division by zero, square root of a negative number, or a result out of range |
+
+### Examples
+
+The examples use port 3000 (Docker). When running the backend alone, use port 8080.
+
+**Success**
+
+```bash
+curl -X POST http://localhost:3000/api/v1/divide -H "Content-Type: application/json" -d '{"a": 10, "b": 4}'
+```
+
+```json
+{"operation":"divide","a":10,"b":4,"result":2.5}
+```
+
+**Division by zero (422)**
+
+```bash
+curl -X POST http://localhost:3000/api/v1/divide -H "Content-Type: application/json" -d '{"a": 1, "b": 0}'
+```
+
+```json
+{"type":"about:blank","title":"Unprocessable Entity","status":422,"detail":"division by zero"}
+```
+
+**Missing field (400)**
+
+```bash
+curl -X POST http://localhost:3000/api/v1/add -H "Content-Type: application/json" -d '{"a": 1}'
+```
+
+```json
+{"type":"about:blank","title":"Bad Request","status":400,"detail":"field \"b\" is required"}
+```
+
+**Square root (one operand)**
+
+```bash
+curl -X POST http://localhost:3000/api/v1/sqrt -H "Content-Type: application/json" -d '{"a": 16}'
+```
+
+```json
+{"operation":"sqrt","a":16,"result":4}
+```
+
+**PowerShell.** PowerShell doesn't escape double quotes with `\"` like bash does. Wrap the JSON in single quotes
+and call `curl.exe`, or use `Invoke-RestMethod`:
+
+```powershell
+curl.exe -X POST http://localhost:3000/api/v1/divide -H "Content-Type: application/json" -d '{"a": 10, "b": 4}'
+Invoke-RestMethod -Method Post -Uri http://localhost:3000/api/v1/divide -ContentType "application/json" -Body '{"a": 10, "b": 4}'
+```
 
 ## AI usage
 
