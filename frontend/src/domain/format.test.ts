@@ -4,11 +4,17 @@ import { formatExpression, formatNumber } from './format'
 describe('formatNumber', () => {
   it.each([
     [0.1 + 0.2, '0.3'],
+    [1.1 * 3, '3.3'],
     [2.5, '2.5'],
     [1024, '1024'],
     [-8, '-8'],
-    [Math.SQRT2, '1.41421356237'],
+    [Math.SQRT2, '1.4142135623731'],
+    [2 / 3, '0.666666666666667'],
     [1e21, '1e+21'],
+    // Integers with more than 12 digits must keep every digit (2^40 and 2^40 + 1).
+    [2 ** 40, '1099511627776'],
+    [2 ** 40 + 1, '1099511627777'],
+    [123456789 * 1000001, '123456912456789'],
   ])('formats %d as %s', (value, expected) => {
     expect(formatNumber(value)).toBe(expected)
   })

@@ -1,12 +1,18 @@
 import type { OperationId } from './operations'
 
 /**
- * Formats a number for display, rounding to 12 significant digits to hide
- * binary floating-point noise: 0.1 + 0.2 is shown as 0.3, not 0.30000000000000004.
- * The API still returns the exact float64 value.
+ * Formats a number for display.
+ *
+ * Integers are shown exactly as returned. Other numbers are rounded to 15
+ * significant digits, the most a float64 always represents faithfully, which
+ * hides binary floating-point noise: 0.1 + 0.2 is shown as 0.3, not
+ * 0.30000000000000004. The API still returns the exact float64 value.
  */
 export function formatNumber(value: number): string {
-  return String(Number(value.toPrecision(12)))
+  if (Number.isInteger(value)) {
+    return String(value)
+  }
+  return String(Number(value.toPrecision(15)))
 }
 
 /** The operands of a calculation, as the backend echoes them back. */
