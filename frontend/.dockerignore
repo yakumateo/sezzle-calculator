@@ -1,0 +1,6 @@
+# Dependencies are installed inside the image with npm ci; local artifacts stay out.
+node_modules/
+dist/
+coverage/
+Dockerfile
+.dockerignore
