@@ -1,3 +1,4 @@
+import './App.css'
 import { CalculatorForm } from './components/CalculatorForm'
 import { ResultPanel } from './components/ResultPanel'
 import { useCalculation } from './hooks/useCalculation'
