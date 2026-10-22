@@ -1,0 +1,35 @@
+@startuml
+title <size:24>System Landscape View</size>\n<size:24>People involved, the calculator and the external services it relies on.</size>
+
+set separator none
+left to right direction
+
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+
+AddElementTag("Software System,Platform", $bgColor="#0d8f5c", $borderColor="#096440", $fontColor="#ffffff", $sprite="", $shadowing="", $borderStyle="solid")
+AddElementTag("Person,Developer", $bgColor="#5a6b7f", $borderColor="#3e4a58", $fontColor="#ffffff", $sprite="", $shadowing="", $borderStyle="solid")
+AddElementTag("Person,User", $bgColor="#0b5f8a", $borderColor="#074260", $fontColor="#ffffff", $sprite="", $shadowing="", $borderStyle="solid")
+AddElementTag("Software System,External", $bgColor="#9a9a9a", $borderColor="#6b6b6b", $fontColor="#ffffff", $sprite="", $shadowing="", $borderStyle="solid")
+
+AddRelTag("Relationship", $textColor="#666666", $lineColor="#666666", $lineStyle = DashedLine())
+
+Person(User, "User", $descr="Performs calculations in a web browser, on desktop or mobile.", $tags="Person,User", $link="")
+Person(APIConsumer, "API Consumer", $descr="Developer who calls the REST API directly or explores it in Swagger UI.", $tags="Person,Developer", $link="")
+System(jsDelivrCDN, "jsDelivr CDN", $descr="Serves the Swagger UI scripts and styles.", $tags="Software System,External", $link="")
+System(SezzleCalculator, "Sezzle Calculator", $descr="Performs basic and advanced arithmetic operations through a web UI and a REST API.", $tags="Software System,Platform", $link="")
+
+Rel(User, SezzleCalculator, "Performs calculations in", $techn="HTTP", $tags="Relationship", $link="")
+Rel(APIConsumer, SezzleCalculator, "Calls the REST API and reads its documentation in", $techn="JSON / HTTP", $tags="Relationship", $link="")
+Rel(APIConsumer, jsDelivrCDN, "Loads the Swagger UI assets from", $techn="HTTPS", $tags="Relationship", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
+@enduml
