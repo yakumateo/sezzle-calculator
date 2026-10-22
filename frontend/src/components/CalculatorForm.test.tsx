@@ -44,6 +44,27 @@ describe('CalculatorForm', () => {
     expect(onCalculate).toHaveBeenCalledWith('add', 1, 2)
   })
 
+  it('hides a field error as soon as the user edits that field', async () => {
+    const { user } = renderForm()
+
+    await user.click(screen.getByRole('button', { name: 'Calculate' }))
+    await user.type(screen.getByLabelText('First number'), '1')
+
+    expect(screen.getByLabelText('First number')).not.toHaveAccessibleDescription()
+    expect(screen.getByLabelText('Second number')).toHaveAccessibleDescription('Enter a number')
+  })
+
+  it('clears the errors when the operation changes', async () => {
+    const { user } = renderForm()
+
+    await user.click(screen.getByRole('button', { name: 'Calculate' }))
+    await user.click(screen.getByRole('button', { name: 'Square root' }))
+    await user.click(screen.getByRole('button', { name: 'Add' }))
+
+    expect(screen.getByLabelText('First number')).not.toHaveAccessibleDescription()
+    expect(screen.getByLabelText('Second number')).not.toHaveAccessibleDescription()
+  })
+
   it('asks for a single number for square root', async () => {
     const { onCalculate, user } = renderForm()
 

@@ -30,10 +30,27 @@ export function CalculatorForm({ onCalculate, busy }: CalculatorFormProps) {
     onCalculate(operation.id, validation.a, validation.b)
   }
 
+  // Editing a field hides its error right away; it is checked again on submit.
+  function changeA(value: string) {
+    setA(value)
+    setErrors((current) => ({ ...current, a: undefined }))
+  }
+
+  function changeB(value: string) {
+    setB(value)
+    setErrors((current) => ({ ...current, b: undefined }))
+  }
+
+  // Errors belong to the previous operation's inputs, so they are cleared.
+  function selectOperation(id: OperationId) {
+    setOperationId(id)
+    setErrors({})
+  }
+
   return (
     // noValidate: validation messages come from our own rules, not the browser's.
     <form className="calculator-form" onSubmit={handleSubmit} noValidate>
-      <NumberField id="operand-a" label={labelA} value={a} error={errors.a} onChange={setA} />
+      <NumberField id="operand-a" label={labelA} value={a} error={errors.a} onChange={changeA} />
 
       <fieldset className="operations">
         <legend>Operation</legend>
@@ -44,15 +61,16 @@ export function CalculatorForm({ onCalculate, busy }: CalculatorFormProps) {
             className="operation"
             aria-label={op.label}
             aria-pressed={op.id === operationId}
-            onClick={() => setOperationId(op.id)}
+            onClick={() => selectOperation(op.id)}
           >
             {op.symbol}
           </button>
         ))}
       </fieldset>
 
+      {/* labelB is always set for binary operations; checking it lets TypeScript narrow its type. */}
       {isBinary(operation) && labelB && (
-        <NumberField id="operand-b" label={labelB} value={b} error={errors.b} onChange={setB} />
+        <NumberField id="operand-b" label={labelB} value={b} error={errors.b} onChange={changeB} />
       )}
 
       <button type="submit" className="submit" disabled={busy}>
