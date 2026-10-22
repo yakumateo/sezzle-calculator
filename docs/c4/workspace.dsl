@@ -115,6 +115,33 @@ workspace "Sezzle Calculator" "Full-stack calculator: a React single-page applic
         operations -> resultGuard "Checks every result with" "Function call"
         problemResponder -> operations "Maps the sentinel errors of the domain to 422" "Function call"
 
+        # ====================================================================
+        #  DEPLOYMENT
+        # ====================================================================
+
+        deploymentEnvironment "Docker Compose" {
+
+            deploymentNode "User Device" "Desktop or mobile device of the user." "Windows / macOS / Linux / Android / iOS" "ClientDevice" {
+                deploymentNode "Web Browser" "Browser where the single-page application runs." "Chrome / Firefox / Safari / Edge" {
+                    spaInstance = containerInstance spa
+                }
+            }
+
+            deploymentNode "Host Machine" "Machine that runs the stack with docker compose up." "Windows / macOS / Linux" "HostNode" {
+                deploymentNode "Docker Engine" "Container engine that builds and runs both images." "Docker Compose" {
+                    deploymentNode "Compose Network" "Private bridge network; only port 3000 is published." "Docker network" {
+
+                        deploymentNode "frontend" "Container exposed on port 3000." "nginx:1.28-alpine" {
+                            webApplicationInstance = containerInstance webApplication
+                        }
+
+                        deploymentNode "backend" "Container on port 8080, reachable only inside the network. Runs as a non-root user." "alpine:3.22" {
+                            apiInstance = containerInstance api
+                        }
+                    }
+                }
+            }
+        }
     }
 
     configuration {
@@ -161,6 +188,14 @@ workspace "Sezzle Calculator" "Full-stack calculator: a React single-page applic
         }
 
         component spa "Components-SPA" "Single-page application by layer: presentation, state, domain and API client." {
+            include *
+            autoLayout lr 300 300
+        }
+
+        # ================================================================
+        #  DEPLOYMENT
+        # ================================================================
+        deployment calculator "Docker Compose" "Deployment-DockerCompose" "Local stack: the browser on the user's device and both containers on the host." {
             include *
             autoLayout lr 300 300
         }
@@ -242,6 +277,17 @@ workspace "Sezzle Calculator" "Full-stack calculator: a React single-page applic
             element "Bootstrap" {
                 background #eeeeee
                 color #1f1f1f
+            }
+
+            element "Deployment Node" {
+                color #444444
+                fontSize 20
+            }
+            element "ClientDevice" {
+                background #eefaf3
+            }
+            element "HostNode" {
+                background #fff8e6
             }
 
             relationship "Relationship" {
