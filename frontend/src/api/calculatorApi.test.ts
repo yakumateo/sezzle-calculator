@@ -27,6 +27,7 @@ describe('calculate', () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: '{"a":10,"b":4}',
+      signal: expect.any(AbortSignal),
     })
   })
 
@@ -71,6 +72,16 @@ describe('calculate', () => {
     await expect(calculate('add', 1, 2)).rejects.toMatchObject({
       status: 500,
       message: 'Unexpected error (HTTP 500). Please try again.',
+    })
+  })
+
+  // AbortSignal.timeout() rejects fetch with a DOMException named "TimeoutError".
+  it('throws a timeout error when the server takes too long', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new DOMException('signal timed out', 'TimeoutError')))
+
+    await expect(calculate('add', 1, 2)).rejects.toMatchObject({
+      status: 0,
+      message: 'The server took too long to respond. Please try again.',
     })
   })
 

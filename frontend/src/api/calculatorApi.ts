@@ -30,12 +30,18 @@ export class ApiError extends Error {
 }
 
 /**
+ * How long a calculation may take before the request is aborted. It matches the
+ * backend's WriteTimeout, so the UI never waits longer than the server would.
+ */
+const REQUEST_TIMEOUT_MS = 10_000
+
+/**
  * Calls the backend endpoint for an operation. `b` is only sent when it is
  * defined, so one-operand operations send just `a`.
  *
  * Throws ApiError with the backend's explanation (for example "division by
- * zero") or a generic message when the server is unreachable or the response
- * is not the expected JSON.
+ * zero") or a generic message when the server is unreachable, too slow, or the
+ * response is not the expected JSON.
  */
 export async function calculate(operation: OperationId, a: number, b?: number): Promise<CalculationResult> {
   let response: Response
@@ -44,8 +50,12 @@ export async function calculate(operation: OperationId, a: number, b?: number): 
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(b === undefined ? { a } : { a, b }),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     })
-  } catch {
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'TimeoutError') {
+      throw new ApiError('The server took too long to respond. Please try again.', 0)
+    }
     throw new ApiError('Could not reach the server. Check your connection and try again.', 0)
   }
 
