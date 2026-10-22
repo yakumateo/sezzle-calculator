@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { parseOperand } from './validation'
+import { getOperation } from './operations'
+import { parseOperand, validateInputs } from './validation'
 
 describe('parseOperand', () => {
   it.each([
@@ -25,5 +26,34 @@ describe('parseOperand', () => {
 
   it('rejects numbers that overflow to Infinity', () => {
     expect(parseOperand('9'.repeat(400))).toEqual({ error: 'Number is too large' })
+  })
+})
+
+describe('validateInputs', () => {
+  const divide = getOperation('divide')
+  const sqrt = getOperation('sqrt')
+
+  it('returns both operands for a two-operand operation', () => {
+    expect(validateInputs(divide, '10', '4')).toEqual({ ok: true, a: 10, b: 4 })
+  })
+
+  it('reports an error for each invalid field', () => {
+    expect(validateInputs(divide, '', 'x')).toEqual({
+      ok: false,
+      errors: { a: 'Enter a number', b: 'Must be a valid number' },
+    })
+  })
+
+  it('reports only the invalid field', () => {
+    expect(validateInputs(divide, '10', '')).toEqual({ ok: false, errors: { b: 'Enter a number' } })
+  })
+
+  // Division by zero is a mathematical rule, so it is left to the backend.
+  it('accepts zero as a divisor', () => {
+    expect(validateInputs(divide, '1', '0')).toEqual({ ok: true, a: 1, b: 0 })
+  })
+
+  it('ignores the second input for a one-operand operation', () => {
+    expect(validateInputs(sqrt, '16', 'not a number')).toEqual({ ok: true, a: 16, b: undefined })
   })
 })
