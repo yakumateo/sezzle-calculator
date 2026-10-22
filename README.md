@@ -25,20 +25,14 @@ perform basic and advanced arithmetic operations.
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    browser[Browser] -->|"http://localhost:3000"| nginx
-
-    subgraph compose[Docker Compose]
-        nginx["frontend<br/>nginx: React build + reverse proxy"]
-        backend["backend<br/>Go REST API :8080"]
-        nginx -->|"/api, /docs"| backend
-    end
-```
+![Container diagram](docs/c4/images/structurizr-Containers.svg)
 
 The browser only talks to nginx, which serves the React build and forwards `/api` and `/docs` to the Go
 service. One origin means no CORS, and the backend publishes no port of its own. In development, the Vite
 dev server plays the same role.
+
+The full [C4 model](docs/c4/README.md) (landscape, context, containers, components of both applications and
+the Docker Compose deployment) is written in Structurizr DSL.
 
 Inside each layer, dependencies point inwards:
 
@@ -65,6 +59,7 @@ frontend/
 ├── nginx.conf           static files + reverse proxy for the API
 └── Dockerfile
 docs/adrs.md             architecture decision records
+docs/c4/                 C4 model in Structurizr DSL, with PlantUML and SVG exports
 docker-compose.yml       runs the full stack
 ```
 

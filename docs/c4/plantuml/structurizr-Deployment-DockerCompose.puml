@@ -1,0 +1,58 @@
+@startuml
+title <size:24>Deployment View: Sezzle Calculator - Docker Compose</size>\n<size:24>Local stack: the browser on the user's device and both containers on the host.</size>
+
+set separator none
+left to right direction
+
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+!include <C4/C4_Deployment>
+
+AddElementTag("Container,WebServer", $bgColor="#2e7cb8", $borderColor="#205680", $fontColor="#ffffff", $sprite="", $shadowing="", $borderStyle="solid")
+AddElementTag("Container,API", $bgColor="#17607f", $borderColor="#104358", $fontColor="#ffffff", $sprite="", $shadowing="", $borderStyle="solid")
+AddElementTag("Deployment Node,HostNode", $bgColor="#fff8e6", $borderColor="#b2ada1", $fontColor="#444444", $sprite="", $shadowing="", $borderStyle="solid")
+AddElementTag("Container,SPA", $bgColor="#1168bd", $borderColor="#0b4884", $fontColor="#ffffff", $sprite="", $shadowing="", $borderStyle="solid")
+AddElementTag("Deployment Node", $bgColor="#ffffff", $borderColor="#444444", $fontColor="#444444", $sprite="", $shadowing="", $borderStyle="solid")
+AddElementTag("Deployment Node,ClientDevice", $bgColor="#eefaf3", $borderColor="#a6afaa", $fontColor="#444444", $sprite="", $shadowing="", $borderStyle="solid")
+
+AddRelTag("Relationship", $textColor="#666666", $lineColor="#666666", $lineStyle = DashedLine())
+
+Deployment_Node(DockerCompose.UserDevice, "User Device", $type="Windows / macOS / Linux / Android / iOS", $descr="Desktop or mobile device of the user.", $tags="Deployment Node,ClientDevice", $link="") {
+  Deployment_Node(DockerCompose.UserDevice.WebBrowser, "Web Browser", $type="Chrome / Firefox / Safari / Edge", $descr="Browser where the single-page application runs.", $tags="Deployment Node", $link="") {
+    Container(DockerCompose.UserDevice.WebBrowser.SinglePageApplication_1, "Single-Page Application", $techn="TypeScript, React 19", $descr="Lets the user enter numbers, choose an operation and see the result.", $tags="Container,SPA", $link="")
+  }
+
+}
+
+Deployment_Node(DockerCompose.HostMachine, "Host Machine", $type="Windows / macOS / Linux", $descr="Machine that runs the stack with docker compose up.", $tags="Deployment Node,HostNode", $link="") {
+  Deployment_Node(DockerCompose.HostMachine.DockerEngine, "Docker Engine", $type="Docker Compose", $descr="Container engine that builds and runs both images.", $tags="Deployment Node", $link="") {
+    Deployment_Node(DockerCompose.HostMachine.DockerEngine.ComposeNetwork, "Compose Network", $type="Docker network", $descr="Private bridge network; only port 3000 is published.", $tags="Deployment Node", $link="") {
+      Deployment_Node(DockerCompose.HostMachine.DockerEngine.ComposeNetwork.frontend, "frontend", $type="nginx:1.28-alpine", $descr="Container exposed on port 3000.", $tags="Deployment Node", $link="") {
+        Container(DockerCompose.HostMachine.DockerEngine.ComposeNetwork.frontend.WebApplication_1, "Web Application", $techn="nginx 1.28", $descr="Delivers the static content and the single-page application to the browser, and proxies /api and /docs to the API.", $tags="Container,WebServer", $link="")
+      }
+
+      Deployment_Node(DockerCompose.HostMachine.DockerEngine.ComposeNetwork.backend, "backend", $type="alpine:3.22", $descr="Container on port 8080, reachable only inside the network. Runs as a non-root user.", $tags="Deployment Node", $link="") {
+        Container(DockerCompose.HostMachine.DockerEngine.ComposeNetwork.backend.CalculatorAPI_1, "Calculator API", $techn="Go 1.27, net/http", $descr="Exposes one REST endpoint per operation, validates every request and documents itself with OpenAPI.", $tags="Container,API", $link="")
+      }
+
+    }
+
+  }
+
+}
+
+Rel(DockerCompose.HostMachine.DockerEngine.ComposeNetwork.frontend.WebApplication_1, DockerCompose.UserDevice.WebBrowser.SinglePageApplication_1, "Delivers the application to the user's browser", $techn="HTTP", $tags="Relationship", $link="")
+Rel(DockerCompose.UserDevice.WebBrowser.SinglePageApplication_1, DockerCompose.HostMachine.DockerEngine.ComposeNetwork.frontend.WebApplication_1, "Sends calculation requests to /api at", $techn="JSON / HTTP", $tags="Relationship", $link="")
+Rel(DockerCompose.HostMachine.DockerEngine.ComposeNetwork.frontend.WebApplication_1, DockerCompose.HostMachine.DockerEngine.ComposeNetwork.backend.CalculatorAPI_1, "Forwards /api and /docs requests to (reverse proxy)", $techn="HTTP", $tags="Relationship", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
+@enduml

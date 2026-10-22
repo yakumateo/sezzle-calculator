@@ -1,0 +1,57 @@
+@startuml
+title <size:24>Component View: Sezzle Calculator - Calculator API</size>\n<size:24>Calculator API by layer. Dependencies point inwards: the domain knows nothing about HTTP.</size>
+
+set separator none
+left to right direction
+
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+!include <C4/C4_Component>
+
+AddElementTag("Container,WebServer", $bgColor="#2e7cb8", $borderColor="#205680", $fontColor="#ffffff", $sprite="", $shadowing="", $borderStyle="solid")
+AddElementTag("Component,Domain", $bgColor="#d9ead3", $borderColor="#97a393", $fontColor="#1f1f1f", $sprite="", $shadowing="", $borderStyle="solid")
+AddElementTag("Component,Bootstrap", $bgColor="#eeeeee", $borderColor="#a6a6a6", $fontColor="#1f1f1f", $sprite="", $shadowing="", $borderStyle="solid")
+AddElementTag("Component,Interface", $bgColor="#fff2cc", $borderColor="#b2a98e", $fontColor="#1f1f1f", $sprite="", $shadowing="", $borderStyle="solid")
+
+AddRelTag("Relationship", $textColor="#666666", $lineColor="#666666", $lineStyle = DashedLine())
+
+AddBoundaryTag("Container,API", $bgColor="#ffffff", $borderColor="#104358", $fontColor="#104358", $shadowing="", $borderStyle="solid")
+
+System_Boundary("SezzleCalculator_boundary", "Sezzle Calculator", $tags="Software System,Platform") {
+  Container_Boundary("SezzleCalculator.CalculatorAPI_boundary", "Calculator API", $tags="Container,API") {
+    Component(SezzleCalculator.CalculatorAPI.ServerBootstrap, "Server Bootstrap", $techn="Go, cmd/server", $descr="Builds the router and runs the HTTP server with timeouts and graceful shutdown.", $tags="Component,Bootstrap", $link="")
+    Component(SezzleCalculator.CalculatorAPI.Router, "Router", $techn="net/http ServeMux", $descr="Maps method and path to a handler; answers 404 and 405.", $tags="Component,Interface", $link="")
+    Component(SezzleCalculator.CalculatorAPI.OperationHandlers, "Operation Handlers", $techn="Go, httpapi", $descr="One shared handler for two-operand operations, one for square root.", $tags="Component,Interface", $link="")
+    Component(SezzleCalculator.CalculatorAPI.RequestDecoder, "Request Decoder", $techn="Go, httpapi", $descr="Strict JSON decoding: required fields, no unknown fields, 1 KiB limit.", $tags="Component,Interface", $link="")
+    Component(SezzleCalculator.CalculatorAPI.ProblemResponder, "Problem Responder", $techn="Go, httpapi", $descr="Writes JSON results and maps errors to Problem Details: 400, 413, 422.", $tags="Component,Interface", $link="")
+    Component(SezzleCalculator.CalculatorAPI.HealthHandler, "Health Handler", $techn="Go, httpapi", $descr="Reports that the service is up.", $tags="Component,Interface", $link="")
+    Component(SezzleCalculator.CalculatorAPI.APIDocs, "API Docs", $techn="Go, go:embed", $descr="Serves the OpenAPI contract and Swagger UI, embedded in the binary.", $tags="Component,Interface", $link="")
+    Component(SezzleCalculator.CalculatorAPI.ArithmeticOperations, "Arithmetic Operations", $techn="Go, calculator", $descr="Add, subtract, multiply, divide, power, square root and percentage.", $tags="Component,Domain", $link="")
+    Component(SezzleCalculator.CalculatorAPI.ResultGuard, "Result Guard", $techn="Go, calculator", $descr="Rejects ±Inf and NaN, normalizes -0. Every result passes through it.", $tags="Component,Domain", $link="")
+  }
+
+  Container(SezzleCalculator.WebApplication, "Web Application", $techn="nginx 1.28", $descr="Delivers the static content and the single-page application to the browser, and proxies /api and /docs to the API.", $tags="Container,WebServer", $link="")
+}
+
+Rel(SezzleCalculator.WebApplication, SezzleCalculator.CalculatorAPI.Router, "Forwards /api and /docs requests to", $techn="HTTP", $tags="Relationship", $link="")
+Rel(SezzleCalculator.CalculatorAPI.ServerBootstrap, SezzleCalculator.CalculatorAPI.Router, "Builds and serves", $techn="Function call", $tags="Relationship", $link="")
+Rel(SezzleCalculator.CalculatorAPI.Router, SezzleCalculator.CalculatorAPI.OperationHandlers, "Dispatches POST /api/v1/{operation} to", $techn="Function call", $tags="Relationship", $link="")
+Rel(SezzleCalculator.CalculatorAPI.Router, SezzleCalculator.CalculatorAPI.HealthHandler, "Dispatches GET /health to", $techn="Function call", $tags="Relationship", $link="")
+Rel(SezzleCalculator.CalculatorAPI.Router, SezzleCalculator.CalculatorAPI.APIDocs, "Dispatches GET /docs to", $techn="Function call", $tags="Relationship", $link="")
+Rel(SezzleCalculator.CalculatorAPI.OperationHandlers, SezzleCalculator.CalculatorAPI.RequestDecoder, "Decodes the request body with", $techn="Function call", $tags="Relationship", $link="")
+Rel(SezzleCalculator.CalculatorAPI.OperationHandlers, SezzleCalculator.CalculatorAPI.ArithmeticOperations, "Calculates the result with", $techn="Function call", $tags="Relationship", $link="")
+Rel(SezzleCalculator.CalculatorAPI.OperationHandlers, SezzleCalculator.CalculatorAPI.ProblemResponder, "Writes the result or the error with", $techn="Function call", $tags="Relationship", $link="")
+Rel(SezzleCalculator.CalculatorAPI.ArithmeticOperations, SezzleCalculator.CalculatorAPI.ResultGuard, "Checks every result with", $techn="Function call", $tags="Relationship", $link="")
+Rel(SezzleCalculator.CalculatorAPI.ProblemResponder, SezzleCalculator.CalculatorAPI.ArithmeticOperations, "Maps the sentinel errors of the domain to 422", $techn="Function call", $tags="Relationship", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
+@enduml
