@@ -25,7 +25,7 @@ func SquareRoot(x float64) (float64, error) {
 	if x < 0 {
 		return 0, ErrNegativeSquareRoot
 	}
-	return math.Sqrt(x), nil
+	return checked(math.Sqrt(x))
 }
 
 // Percentage returns percent % of total; for example, Percentage(15, 200) is 30.
