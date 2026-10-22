@@ -51,6 +51,19 @@ func TestSquareRoot(t *testing.T) {
 	}
 }
 
+// math.Sqrt(-0) is -0, and -0 is not < 0, so it passes the negative check.
+// Like TestMultiplyNormalizesNegativeZero, the sign bit is checked explicitly.
+func TestSquareRootNormalizesNegativeZero(t *testing.T) {
+	got, err := calculator.SquareRoot(math.Copysign(0, -1))
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if math.Signbit(got) {
+		t.Errorf("result = -0, want 0")
+	}
+}
+
 func TestPercentage(t *testing.T) {
 	runBinaryCases(t, calculator.Percentage, []binaryCase{
 		// Must be exactly 30: Percentage multiplies before dividing to avoid 0.15 * 200 rounding.
