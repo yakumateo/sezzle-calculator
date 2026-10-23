@@ -1,6 +1,6 @@
 # Sezzle Calculator
 
-[![CI](https://github.com/yakumateo/sezzle-calculator/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/yakumateo/sezzle-calculator/actions/workflows/ci.yml)
+[![CI](https://github.com/yakumateo/sezzle-calculator/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yakumateo/sezzle-calculator/actions/workflows/ci.yml)
 
 A full-stack calculator: a **React + TypeScript** frontend that consumes a **Go** REST microservice to
 perform basic and advanced arithmetic operations.
