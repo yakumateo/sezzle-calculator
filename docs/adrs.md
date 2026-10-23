@@ -34,8 +34,9 @@ Each record includes:
 
 ### Context
 
-The service exposes eight routes, decodes small JSON bodies and returns JSON. Since Go 1.22,
-`net/http.ServeMux` supports method-aware patterns such as `"POST /api/v1/add"` and answers `405` on its own.
+The service exposes ten routes (seven operations plus health and documentation), decodes small JSON bodies
+and returns JSON. Since Go 1.22, `net/http.ServeMux` supports method-aware patterns such as
+`"POST /api/v1/add"` and answers `405` on its own.
 
 ### Decision
 
@@ -50,7 +51,7 @@ Use `net/http`, `encoding/json` and `log/slog` only. The backend has no third-pa
 
 ### Alternatives considered
 
-- Gin, Echo or chi: useful for larger APIs with middleware chains, unnecessary for eight routes.
+- Gin, Echo or chi: useful for larger APIs with middleware chains, unnecessary for ten routes.
 
 ---
 
@@ -109,7 +110,7 @@ Successful responses echo the operands: `{"operation": "divide", "a": 10, "b": 4
 ### Consequences
 
 - Each route is documented and tested on its own, and an unknown operation is a plain `404`.
-- All two-operand endpoints share one handler (`binaryHandler`), so adding an operation is one line.
+- All two-operand endpoints share one handler (`binaryHandler`), so exposing a new operation is one line in the router.
 - The `/v1` prefix allows breaking changes in a future `/v2` without affecting current clients.
 
 ### Alternatives considered
@@ -240,7 +241,7 @@ but that page would call the API from another origin and be blocked by CORS.
 ### Alternatives considered
 
 - Generating the spec from code comments with swaggo: adds a dependency and a generation step, not
-  justified for eight endpoints.
+  justified for seven operations.
 - Swagger UI in a separate container: blocked by CORS, as described above.
 
 ---

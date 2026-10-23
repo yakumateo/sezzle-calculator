@@ -8,6 +8,8 @@ implementation-only commits are summarized instead of listed one by one.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-22
+
 ### Added
 
 - **Calculator domain (Go):** addition, subtraction, multiplication, division, power, square root and
@@ -23,4 +25,8 @@ implementation-only commits are summarized instead of listed one by one.
   and reverse proxy for the API.
 - **Tests and CI:** unit tests with coverage reports in both layers, and a GitHub Actions workflow that
   checks formatting, lint, tests, the production build and the Docker images.
-- **Documentation:** README, architecture decision records and the AI prompt log.
+- **Documentation:** README, architecture decision records, a C4 model in Structurizr DSL with PlantUML and
+  SVG exports, and the AI prompt log.
+
+[Unreleased]: https://github.com/yakumateo/sezzle-calculator/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/yakumateo/sezzle-calculator/releases/tag/v1.0.0

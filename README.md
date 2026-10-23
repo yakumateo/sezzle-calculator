@@ -1,6 +1,6 @@
 # Sezzle Calculator
 
-[![CI](https://github.com/yakumateo/sezzle-calculator/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/yakumateo/sezzle-calculator/actions/workflows/ci.yml)
+[![CI](https://github.com/yakumateo/sezzle-calculator/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yakumateo/sezzle-calculator/actions/workflows/ci.yml)
 
 A full-stack calculator: a **React + TypeScript** frontend that consumes a **Go** REST microservice to
 perform basic and advanced arithmetic operations.
@@ -8,7 +8,7 @@ perform basic and advanced arithmetic operations.
 - **Operations:** addition, subtraction, multiplication, division, power, square root and percentage.
 - **Backend:** Go standard library only, Problem Details errors (RFC 9457), OpenAPI contract with Swagger UI.
 - **Frontend:** React 19, strict TypeScript, accessible and responsive (mobile-first) single-page app.
-- **Quality:** unit tests in both layers with coverage reports, CI on every push, Docker Compose for the full stack.
+- **Quality:** unit tests in both layers with coverage reports, CI on GitHub Actions, Docker Compose for the full stack.
 
 ## Contents
 
@@ -78,7 +78,8 @@ Stop it with `docker compose down`.
 
 ## Running the backend
 
-Requires **Go 1.27.2 or later** (1.27.0 and 1.27.1 have known `net/http` vulnerabilities).
+Requires **Go 1.27**. Use the latest patch release (1.27.2 or later), since 1.27.0 and 1.27.1 have known
+`net/http` vulnerabilities; CI and the Docker image already use the latest 1.27.x.
 
 ```bash
 cd backend
@@ -179,12 +180,18 @@ curl -X POST http://localhost:3000/api/v1/sqrt -H "Content-Type: application/jso
 {"operation":"sqrt","a":16,"result":4}
 ```
 
-**PowerShell.** PowerShell doesn't escape double quotes with `\"` like bash does. Wrap the JSON in single quotes
-and call `curl.exe`, or use `Invoke-RestMethod`:
+**PowerShell.** PowerShell doesn't escape double quotes with `\"` like bash does. Use `Invoke-RestMethod`,
+which works in every version:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://localhost:3000/api/v1/divide -ContentType "application/json" -Body '{"a": 10, "b": 4}'
+```
+
+With `curl.exe`, wrap the JSON in single quotes. This needs PowerShell 7.3 or later: Windows PowerShell 5.1
+strips the inner quotes before calling the executable, and the API answers `400`.
 
 ```powershell
 curl.exe -X POST http://localhost:3000/api/v1/divide -H "Content-Type: application/json" -d '{"a": 10, "b": 4}'
-Invoke-RestMethod -Method Post -Uri http://localhost:3000/api/v1/divide -ContentType "application/json" -Body '{"a": 10, "b": 4}'
 ```
 
 ## Tests and coverage
@@ -199,7 +206,7 @@ go test ./... -coverprofile=coverage.out
 go tool cover -html=coverage.out -o coverage.html
 
 # Frontend: unit tests with coverage (text summary + HTML report in coverage/)
-cd frontend
+cd ../frontend
 npm run coverage
 ```
 
@@ -228,7 +235,8 @@ for an unexpected JSON decoding error.
   whole page.
 
 **CI:** [GitHub Actions](.github/workflows/ci.yml) runs formatting, vet, lint, tests with coverage, the
-production build and the Docker image builds on every push. The HTML coverage reports are uploaded as
+production build and the Docker image builds on pushes to `main`, `develop` and release branches, and on
+pull requests. The HTML coverage reports are uploaded as
 artifacts of each run.
 
 ## Design decisions
@@ -236,7 +244,8 @@ artifacts of each run.
 Each decision is explained, with its trade-offs and alternatives, in [`docs/adrs.md`](docs/adrs.md).
 
 - **Go standard library only.** Since Go 1.22, `net/http` routes by method (`"POST /api/v1/add"`), so
-  eight routes don't need a framework. The backend has no third-party dependencies.
+  seven operations plus health and docs routes don't need a framework. The backend has no third-party
+  dependencies.
 - **Domain independent of HTTP.** `internal/calculator` is pure functions returning `(float64, error)`; the
   HTTP layer maps its sentinel errors to status codes. No persistence or application layer, since there is
   no data and each use case is one function call.

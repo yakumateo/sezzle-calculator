@@ -24,8 +24,7 @@ project was built. Routine prompts ("continue", "commit this") are left out.
 
 > "Before writing code, go through every line of the assignment and give me a short plan… I'll approve it first."
 >
-> "Go, Sezzle's stack, even though I've never used it… Base it on my course's reference microservice:
-> layers, ADRs, changelog, Git Flow."
+> "Go, Sezzle's stack, even though I've never used it… Follow my professor's reference microservice."
 
 → A plan mapped to every requirement: a domain independent of HTTP, one endpoint per operation,
 Problem Details errors, Docker Compose. Nothing was coded until I approved it.
