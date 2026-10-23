@@ -10,6 +10,12 @@ perform basic and advanced arithmetic operations.
 - **Frontend:** React 19, strict TypeScript, accessible and responsive (mobile-first) single-page app.
 - **Quality:** unit tests in both layers with coverage reports, CI on GitHub Actions, Docker Compose for the full stack.
 
+### Video (4 min)
+
+How I approached the assessment, what I built and the decisions behind it:
+
+[![Watch the project video](https://img.youtube.com/vi/BLBgXF6q-Ps/hqdefault.jpg)](https://youtu.be/BLBgXF6q-Ps)
+
 ## Contents
 
 - [Architecture](#architecture)
