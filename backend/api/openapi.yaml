@@ -1,0 +1,218 @@
+openapi: 3.0.3
+info:
+  title: Sezzle Calculator API
+  version: 1.0.0
+  description: |
+    REST microservice that performs basic and advanced arithmetic operations.
+
+    Every operation is a POST with a JSON body. Successful calculations return 200
+    with the operands and the result. Errors use Problem Details (RFC 9457, formerly
+    RFC 7807) with the application/problem+json media type:
+
+    - 400 — the request could not be understood (invalid JSON, missing or unknown fields).
+    - 413 — the request body is larger than 1 KiB.
+    - 422 — the request is valid but the result is undefined (division by zero,
+      square root of a negative number, result out of range).
+servers:
+  - url: /
+    description: Same origin as this page
+
+tags:
+  - name: Basic operations
+  - name: Advanced operations
+  - name: Health
+
+paths:
+  /api/v1/add:
+    post:
+      tags: [Basic operations]
+      summary: Add two numbers
+      description: Returns a + b.
+      operationId: add
+      requestBody: { $ref: '#/components/requestBodies/Binary' }
+      responses:
+        '200': { $ref: '#/components/responses/Calculation' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+
+  /api/v1/subtract:
+    post:
+      tags: [Basic operations]
+      summary: Subtract two numbers
+      description: Returns a - b.
+      operationId: subtract
+      requestBody: { $ref: '#/components/requestBodies/Binary' }
+      responses:
+        '200': { $ref: '#/components/responses/Calculation' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+
+  /api/v1/multiply:
+    post:
+      tags: [Basic operations]
+      summary: Multiply two numbers
+      description: Returns a * b.
+      operationId: multiply
+      requestBody: { $ref: '#/components/requestBodies/Binary' }
+      responses:
+        '200': { $ref: '#/components/responses/Calculation' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+
+  /api/v1/divide:
+    post:
+      tags: [Basic operations]
+      summary: Divide two numbers
+      description: Returns a / b. Dividing by zero returns 422.
+      operationId: divide
+      requestBody: { $ref: '#/components/requestBodies/Binary' }
+      responses:
+        '200': { $ref: '#/components/responses/Calculation' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+
+  /api/v1/power:
+    post:
+      tags: [Advanced operations]
+      summary: Raise a number to a power
+      description: |
+        Returns a raised to b. Zero raised to a negative exponent and a negative
+        base with a fractional exponent have no real result and return 422.
+      operationId: power
+      requestBody: { $ref: '#/components/requestBodies/Binary' }
+      responses:
+        '200': { $ref: '#/components/responses/Calculation' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+
+  /api/v1/percentage:
+    post:
+      tags: [Advanced operations]
+      summary: Calculate a percentage
+      description: Returns a percent of b; for example, a = 15, b = 200 returns 30.
+      operationId: percentage
+      requestBody: { $ref: '#/components/requestBodies/Binary' }
+      responses:
+        '200': { $ref: '#/components/responses/Calculation' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+
+  /api/v1/sqrt:
+    post:
+      tags: [Advanced operations]
+      summary: Square root of a number
+      description: Returns the square root of a. A negative a returns 422.
+      operationId: sqrt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UnaryRequest' }
+            example: { a: 16 }
+      responses:
+        '200':
+          description: Calculation result
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Calculation' }
+              example: { operation: sqrt, a: 16, result: 4 }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      operationId: health
+      responses:
+        '200':
+          description: The service is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+
+components:
+  schemas:
+    BinaryRequest:
+      type: object
+      required: [a, b]
+      additionalProperties: false
+      properties:
+        a: { type: number, format: double, example: 10 }
+        b: { type: number, format: double, example: 4 }
+
+    UnaryRequest:
+      type: object
+      required: [a]
+      additionalProperties: false
+      properties:
+        a: { type: number, format: double, example: 16 }
+
+    Calculation:
+      type: object
+      required: [operation, a, result]
+      properties:
+        operation: { type: string, example: divide }
+        a: { type: number, format: double, example: 10 }
+        b:
+          type: number
+          format: double
+          example: 4
+          description: Omitted for one-operand operations.
+        result: { type: number, format: double, example: 2.5 }
+
+    Problem:
+      type: object
+      required: [type, title, status, detail]
+      properties:
+        type: { type: string, example: about:blank }
+        title: { type: string, example: Unprocessable Entity }
+        status: { type: integer, example: 422 }
+        detail: { type: string, example: division by zero }
+
+  requestBodies:
+    Binary:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/BinaryRequest' }
+          example: { a: 10, b: 4 }
+
+  responses:
+    Calculation:
+      description: Calculation result
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Calculation' }
+          example: { operation: divide, a: 10, b: 4, result: 2.5 }
+
+    BadRequest:
+      description: Invalid JSON, a missing required field or an unknown field
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { type: about:blank, title: Bad Request, status: 400, detail: 'field "b" is required' }
+
+    PayloadTooLarge:
+      description: The request body is larger than 1 KiB
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { type: about:blank, title: Request Entity Too Large, status: 413, detail: request body must not exceed 1024 bytes }
+
+    UnprocessableEntity:
+      description: The request is valid but the result is undefined
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example: { type: about:blank, title: Unprocessable Entity, status: 422, detail: division by zero }

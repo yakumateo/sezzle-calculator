@@ -1,0 +1,19 @@
+# Runs the full stack: open http://localhost:3000
+#
+#   browser ──▶ frontend (nginx, port 3000) ──/api, /docs──▶ backend (Go, internal only)
+services:
+  backend:
+    build: ./backend
+    # No published ports: the backend is reachable only through nginx,
+    # on the internal network that compose creates for this project.
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      # nginx resolves "backend" at startup, so wait until the API is healthy.
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
